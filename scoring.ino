@@ -36,19 +36,14 @@ void setup() {
   Serial.println("CAP1188 found!");
 
   // Handles the sensitivity of the touch sensors
-  //cap.writeRegister(CAP1188_SENSITIVITY, 0x3F);  // 16x sensitivity
-  //cap.writeRegister(CAP1188_SENSITIVITY, 0x4F);  // 8x  sensitivity
-  //cap.writeRegister(CAP1188_SENSITIVITY, 0x5F);  // 4x  sensitivity
-  cap.writeRegister(CAP1188_SENSITIVITY, 0x4F);  // 2x  sensitivity THIS SEEMS TO WORK THE BEST FOR 3.5" plate sensors
-  //cap.writeRegister(CAP1188_SENSITIVITY, 0x1F);  // 1x  sensitivity
-  //Serial.print("Sensitivity: 0x");
-  //Serial.println(cap.readRegister(CAP1188_SENSITIVITY), HEX);
-  
+  cap.writeRegister(CAP1188_SENSITIVITY, 0x4F);
 }
 
 void loop() {
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
+  boolean wait = false; // this is needed to keep scoring consistent
+  // that way, if the ball stays too long on pressure plate, it won't keep adding points
   
   uint8_t touched = cap.touched();
 
@@ -60,7 +55,7 @@ void loop() {
   }
   
   for (uint8_t i=0; i<8; i++) {
-    // if the green wire is touched, start over
+    // if the red wire is touched, start over
     if(touched == 1){
 
       // need this to clear the whole second row or else lcd looks ugly
@@ -73,11 +68,13 @@ void loop() {
       lcd.print(points);
     }
     
-    // if the yellow wire is touched, increment by 10 points
+    // if the green wire is touched, increment by 10 points (this is C3)
     else if(touched == 4){
       lcd.setCursor(0, 1);
       points += 10;
       lcd.print(points);
+      wait = true;
+      break;
     }
     
     // if the black wire is touched, increment by 20 points
@@ -85,6 +82,8 @@ void loop() {
       lcd.setCursor(0, 1);
       points += 20;
       lcd.print(points);
+      wait = true;
+      break;
     }
     
     // if the blue wire is touched, increment by 30 points
@@ -92,9 +91,14 @@ void loop() {
       lcd.setCursor(0, 1);
       points += 30;
       lcd.print(points);
+      wait = true;
+      break;
     }
+    
+  }
 
-
+  if(wait){ // stops the game for 5 seconds
+    delay(5000);
   }
   
 }
